@@ -1,0 +1,19 @@
+{
+  "name": "build-b6-limitup-pool",
+  "version": "1.1.0",
+  "build_id": "B6",
+  "build_name": "涨停池动态管理",
+  "type": "monitor+data-processing",
+  "description": "每日维护 A 股涨停池，标记首板/连板数/炸板次数/回封时间，并做题材分组(代表题材/梯队厚度/题材龙头)、特殊形态(地天板/天地板/一字/秒板/烂板)、情绪面量化(分层晋级率/炸板率/赚钱效应)。输出动态多维表格 / HTML 看板，支持 Agent 问答。",
+  "entrypoints": {
+    "call": "scripts/build.py:run",
+    "daily": "scripts/build.py:maintain_daily",
+    "backfill": "scripts/build.py:backfill",
+    "render_markdown": "scripts/render.py:render_markdown",
+    "render_html": "scripts/render_html.py:render_html"
+  },
+  "data_source": "PandaData (panda_data>=0.0.9): get_stock_daily + get_stock_min",
+  "production": "build-b6-limitup-pool/生产产物/database.parquet",
+  "callable_by_alpha": true,
+  "dependencies": ["panda_data>=0.0.9", "pandas", "numpy", "pyarrow"]
+}
