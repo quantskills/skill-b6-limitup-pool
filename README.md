@@ -1,10 +1,16 @@
-# B6 · 涨停池动态管理
+# skill-b6-limitup-pool · 涨停池动态管理
+
+[![status](https://img.shields.io/badge/status-Community%20Project-blue)](https://github.com/quantskills/join/blob/main/COMMUNITY_RULES.md) [![license](https://img.shields.io/badge/license-GPL--3.0--only-green)](LICENSE)
+
+> ⚠️ **Community Project（社区项目）**：本项目由社区成员创建，**未经 QuantSkills 官方审核 / 认证 / 背书**。
+> **仅供量化研究与教育示例，不构成投资建议，不承诺任何收益。** 边界声明见文末。
+> 声明文件 [SKILL.md](SKILL.md) ｜ English [README.en.md](README.en.md) ｜ 许可 [LICENSE](LICENSE)（GPL-3.0-only）
 
 > 每日维护 A 股涨停池，标记**首板 / 连板数 / 炸板次数 / 回封时间**，并做**题材分组**、
 > **特殊形态**（天地板·地天板·一字·秒板·烂板）、**情绪面量化**（分层晋级率·炸板率·赚钱效应）。
 > 输出动态多维表格 / 暗色 HTML 看板，支持 Agent 问答。
 >
-> **类型**：监控预警 + 数据处理型 BUILD ｜ **数据源**：PandaData ｜ **服务对象**：盘后复盘 agent · 连板情绪 Alpha · 人工复盘
+> **类型**：监控预警 + 数据处理型 Skill ｜ **数据源**：PandaData ｜ **服务对象**：盘后复盘 agent · 连板情绪研究因子 · 人工复盘
 
 ---
 
@@ -154,4 +160,15 @@ build-b6-limitup-pool/
 详细字段口径见 [开发产物/SKILL.md](开发产物/SKILL.md) 与 [开发产物/references/api_guide.md](开发产物/references/api_guide.md)。
 
 ---
-_口径与 alpha-A3 连板因子同源（涨停判定/连板状态机/一字板/分钟首封·炸板），避免漂移。仅供研究，不构成投资建议。_
+
+## ⚠️ 边界与免责声明（社区规则 §4 / §8）
+
+- **项目状态**：Community Project，未经 QuantSkills 官方审核 / 认证 / 验证 / 背书，非生产可用认证项目。
+- **数据来源**：PandaData（`panda_data` ≥ 0.0.9）。
+- **假设条件**：涨停以接口 `limit_up` 为准（缺失按板块 10/20/30% 兜底）；连板在交易日序列累加（停牌不算断板）。
+- **参数**：回看窗口 / 股票池 / 分钟精度可配置（见 api_guide）。
+- **已知限制**：分钟缺失降级日线代理（精度下降）；题材为接口粗口径；特殊形态为规则判定。
+- **风险边界**：输出为研究/复盘用的**客观统计，不含买卖建议**。
+- **项目性质**：**仅供量化研究与教育示例，不构成投资建议，不承诺收益，不暗示策略安全或保证盈利。**
+- **署名/许可**：口径借鉴同作者 alpha-A3 连板因子（同源避免漂移）；许可证 **GPL-3.0-only**（[LICENSE](LICENSE)）。
+- **维护者**：[@ZLHad](https://github.com/ZLHad)。

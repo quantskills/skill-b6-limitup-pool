@@ -1,0 +1,45 @@
+# QuantSkills project manifest — skill-b6-limitup-pool
+metadata:
+  organization: QuantSkills
+  organization_url: https://github.com/quantskills
+  repository: skill-b6-limitup-pool
+  repository_url: https://github.com/quantskills/skill-b6-limitup-pool
+  project_type: skill
+  collection: limit-up-pool
+  license: GPL-3.0-only
+  status: community-project          # 未经官方审核/认证
+  maintainer: ZLHad
+
+name: 涨停池动态管理 (Limit-Up Pool Dynamic Management)
+summary: >-
+  每日维护 A 股涨停池，标记首板/连板数/炸板次数/回封时间，含题材分组、特殊形态、情绪面量化，
+  输出多维表格与 HTML 看板。仅供研究/教育，不构成投资建议。
+
+declaration: SKILL.md              # 根声明文件（Skill 仓库）
+detailed_skill: 开发产物/SKILL.md   # 面向 agent 的详细调用声明
+readme:
+  zh: README.md
+  en: README.en.md
+
+data_source: PandaData (panda_data>=0.0.9)
+dependencies: [panda_data>=0.0.9, pandas, numpy, pyarrow]
+
+# 运行时入口：各 AI 编码/Agent 运行时通过读取声明文件 + 调用脚本入口使用本 skill
+entrypoints:
+  cli: python 开发产物/scripts/build.py --mode daily
+  call: 开发产物/scripts/build.py:run
+  daily: 开发产物/scripts/build.py:maintain_daily
+  backfill: 开发产物/scripts/build.py:backfill
+  render_markdown: 开发产物/scripts/render.py:render_markdown
+  render_html: 开发产物/scripts/render_html.py:render_html
+
+runtimes:
+  claude-code: { declaration: 开发产物/SKILL.md, invoke: cli }
+  codex:       { declaration: SKILL.md, invoke: cli }
+  cursor:      { declaration: SKILL.md, invoke: cli }
+  hermes:      { declaration: SKILL.md, invoke: cli }
+  openclaw:    { declaration: SKILL.md, invoke: cli }
+
+disclaimer: >-
+  Community Project，未经 QuantSkills 官方审核/认证/背书。仅供量化研究与教育示例，
+  不构成投资建议，不承诺收益。数据源、假设、参数、限制与风险边界见 SKILL.md。
