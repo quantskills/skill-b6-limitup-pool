@@ -241,14 +241,49 @@ def test_sentiment_row():
     print(f"✅ test_sentiment_row（最高{s['max_height']}板/分层晋级率/赚钱效应{s['prev_limitup_premium']:+.1%}）")
 
 
+def test_daily_proxy_clean_seal():
+    """日线代理炸板口径（验收报告 B6 问题①）：低开拉板的干净涨停 blow_up 必须=0，
+    不得误标炸板/反复板/烂板；盘中触板但未封住收盘仍记 1 次日线可见炸板。"""
+    out = run(_daily_rows(), config={"target_date": "2026-06-17"})
+    a = out[out["ts_code"] == "600000.SH"].iloc[0]   # 干净 3 连板：open<板、low 远离板、收盘封死
+    ja = json.loads(a["result_json"])
+    assert ja["seal_metric_source"] == "daily_proxy", ja["seal_metric_source"]
+    assert int(ja["blow_up_count"]) == 0, ja["blow_up_count"]
+    assert ja["seal_quality"] == "稳封", ja["seal_quality"]
+    assert a["special_pattern"] not in ("炸1次回封", "反复板", "烂板"), a["special_pattern"]
+    b = out[out["ts_code"] == "300001.SZ"].iloc[0]   # 摸板未封
+    assert int(json.loads(b["result_json"])["blow_up_count"]) == 1
+    assert b["board_label"] == "炸板未封"
+    print("✅ test_daily_proxy_clean_seal（干净涨停代理炸板=0/稳封；摸板未封仍记炸1）")
+
+
+def test_empty_limitup_day_market_row():
+    """空涨停交易日（验收报告 B6 问题③）：当日无任何涨停/炸板，仍落 1 行 MARKET 情绪面（家数=0），
+    保证情绪面时序不缺日。"""
+    rows = []
+    for dt in ["2026-06-15", "2026-06-16", "2026-06-17"]:
+        p = 10.0
+        rows.append(dict(trade_date=dt, ts_code="600000.SH", name="平票", open=p, close=round(p*1.001, 2),
+                         high=round(p*1.01, 2), low=round(p*0.99, 2), volume=1e6, amount=1e8,
+                         pre_close=p, limit_up=round(p*1.10, 2), limit_down=round(p*0.9, 2), trade_status=0))
+    out = run(rows, config={"target_date": "2026-06-17"})
+    assert len(out[out["result_type"] == "limitup_pool"]) == 0, "无涨停日不应有个股行"
+    market = out[out["result_type"] == "limitup_sentiment"]
+    assert len(market) == 1, "无涨停日仍应有 1 行 MARKET 情绪面"
+    s = json.loads(market.iloc[0]["result_json"])
+    assert s["n_limit_up"] == 0 and market.iloc[0]["trade_date"] == "2026-06-17", s
+    print("✅ test_empty_limitup_day_market_row（空涨停日仍落 MARKET 家数=0，时序不缺日）")
+
+
 def test_real_data_optional():
     """真实数据冒烟：流量超限/权限不足/服务异常 → 跳过（不判失败）。"""
     try:
         out = maintain_daily(with_minute=False)
     except Exception as e:  # noqa: BLE001
         msg = str(e)
-        if any(k in msg for k in ("500009", "单日总流量", "200103", "权限", "环境变量", "ServiceError", "504")):
-            print(f"⏭️  test_real_data_optional 跳过（配额/权限/服务/凭证）：{msg[:60]}")
+        if any(k in msg for k in ("500009", "单日总流量", "200103", "权限", "环境变量", "ServiceError",
+                                   "504", "无法导入", "panda_data", "pip")):
+            print(f"⏭️  test_real_data_optional 跳过（配额/权限/服务/凭证/未装 SDK）：{msg[:60]}")
             return
         raise
     if out.empty:
@@ -271,5 +306,7 @@ if __name__ == "__main__":
     test_special_pattern()
     test_sentiment_row()
     test_render()
+    test_daily_proxy_clean_seal()
+    test_empty_limitup_day_market_row()
     test_real_data_optional()
     print("\n🎉 全部测试通过")

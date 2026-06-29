@@ -22,6 +22,9 @@ tags: [quant, build, production, monitor, limit-up]
 
 > 注：`database.parquet` 由生产任务在 PandaData 配额可用时生成；本仓库不内置合成数据，
 > 避免把来源不明的数据当作生产结果（见 BUILD开发与生产规则V2.md §1、§14）。
+> **随包样例溯源**：当前随包 `database.parquet` 为真实 PandaData 复盘样例，覆盖 **2026-06-18 ~ 2026-06-24**
+> （`data_version=pandadata-limitup-pool-v1`），由 `maintain_daily` 真实抓取生成、可用 `--mode backfill`
+> 全量重建，非测试桩/合成数据。
 
 ## 主键
 

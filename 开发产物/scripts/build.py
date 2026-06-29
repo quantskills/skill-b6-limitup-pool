@@ -347,7 +347,8 @@ def build_streak(daily: pd.DataFrame) -> pd.DataFrame:
     df["touched_limit"] = df["high"].ge(df["eff_limit_up"] * LIMIT_TOL) & df["is_tradable"]
     # 盘中曾触及跌停（地天板/天地板识别用）
     df["touched_limit_down"] = df["low"].le(df["eff_limit_down"] * (2 - LIMIT_TOL)) & df["is_tradable"]
-    # 日线炸板代理：涨停收盘日，日内自涨停价回落幅度（high 贴板但 low 远离 = 炸过）
+    # 日内自涨停价回落幅度（诊断字段；注意低开拉板的干净涨停同样会"low 远离板"，
+    # 故不能据此判炸板——见 compute_seal_metrics 的保守日线代理，本字段已不参与炸板判定）
     df["intraday_open_back"] = np.where(
         df["touched_limit"],
         ((df["eff_limit_up"] - df["low"]) / df["eff_limit_up"]).clip(0, 0.30),
@@ -379,9 +380,11 @@ def compute_seal_metrics(pool: pd.DataFrame, minute: Optional[pd.DataFrame]) -> 
     df["reseal_count"] = 0
     df["seal_metric_source"] = "daily_proxy"
 
-    # 日线代理：一字板=秒封无炸；否则按日内回撤估炸板（>2% 回撤记 1 次炸板代理）
-    proxy_blow = np.where(df.get("is_one_word", False), 0,
-                          np.where(df["intraday_open_back"] >= 0.02, 1, 0))
+    # 日线代理（保守）：日线 OHLC 无法区分"全天稳封"与"封→炸→回封"——两者都满足
+    # high=close=板、low 可远离板（低开拉板的干净涨停 low 同样远离板）。故收盘封死的涨停一律记
+    # blow_up=0（不臆造炸板），只把"盘中触板但未封住收盘"(touched_limit 且 未涨停收盘) 记 1 次
+    # 日线可见炸板（高触板、尾盘回落）。修复验收报告 B6 问题①：低开拉板干净涨停被误标炸板/反复板。
+    proxy_blow = np.where(df["touched_limit"] & ~df["is_limit_up_close"], 1, 0)
     df["blow_up_count"] = proxy_blow.astype(int)
 
     if minute is not None and not minute.empty:
@@ -602,6 +605,10 @@ def assemble_pool(streak: pd.DataFrame, target_date: pd.Timestamp,
     # 涨停池成员 = 当日涨停收盘 或 当日触及涨停后炸板未封（动态管理需要看炸板）
     pool = today[today["is_limit_up_close"] | today["touched_limit"]].copy()
     if pool.empty:
+        # 空涨停日（该交易日有数据但无涨停/炸板）：仍计算并挂载情绪面，供 to_standard_output
+        # 落 1 行 MARKET（家数=0），保证情绪面时序不缺日（修复验收报告 B6 问题③）。
+        pool.attrs["sentiment"] = compute_sentiment(streak, target_date)
+        pool.attrs["target_date"] = target_date
         return pool
 
     # 昨日连板数（for 晋级判定）
@@ -671,9 +678,35 @@ OUTPUT_COLS = [
 ]
 
 
+def _market_row(sentiment: dict, trade_date: str, data_version: str, now_iso: str) -> dict:
+    """构造 1 行市场情绪面 MARKET 记录（target_id=MARKET, result_type=limitup_sentiment）。"""
+    mrow = {c: None for c in OUTPUT_COLS}
+    mrow.update({
+        "trade_date": trade_date, "build_id": BUILD_ID, "build_name": BUILD_NAME,
+        "target_id": "MARKET", "result_type": "limitup_sentiment",
+        "ts_code": "MARKET", "name": "市场情绪面",
+        "limit_up_streak": 0, "prev_streak": 0, "blow_up_count": 0, "reseal_count": 0,
+        "is_first_board": False, "is_one_word": False,
+        "is_limit_up_close": False, "touched_limit": False, "is_concept_leader": False,
+        "concept_board_count": 0,
+        "result_value": f"{sentiment.get('n_limit_up', 0)}涨停/{sentiment.get('max_height', 0)}板",
+        "result_json": json.dumps(sentiment, ensure_ascii=False),
+        "data_version": data_version, "update_time": now_iso,
+    })
+    return mrow
+
+
 def to_standard_output(pool: pd.DataFrame, data_version: str = DEFAULT_DATA_VERSION) -> pd.DataFrame:
     """转 BUILD 生产规则 §11 标准列（trade_date/build_id/target_id/result_type/result_value/result_json...）。"""
     if pool.empty:
+        # 空涨停交易日：若已挂载情绪面，仍落 1 行 MARKET（家数=0），保证情绪面时序不缺日。
+        sentiment = pool.attrs.get("sentiment") or {}
+        tgt = pool.attrs.get("target_date")
+        if sentiment and tgt is not None:
+            now_iso = datetime.now().isoformat(timespec="seconds")
+            trade_date = pd.to_datetime(tgt).strftime("%Y-%m-%d")
+            return pd.DataFrame([_market_row(sentiment, trade_date, data_version, now_iso)],
+                                columns=OUTPUT_COLS)
         return pd.DataFrame(columns=OUTPUT_COLS)
     df = pool.copy()
     df["trade_date"] = pd.to_datetime(df["trade_date"]).dt.strftime("%Y-%m-%d")
@@ -728,19 +761,7 @@ def to_standard_output(pool: pd.DataFrame, data_version: str = DEFAULT_DATA_VERS
     if sentiment:
         trade_date = out["trade_date"].iloc[0] if len(out) else \
             pd.to_datetime(pool["trade_date"].iloc[0]).strftime("%Y-%m-%d")
-        mrow = {c: None for c in OUTPUT_COLS}
-        mrow.update({
-            "trade_date": trade_date, "build_id": BUILD_ID, "build_name": BUILD_NAME,
-            "target_id": "MARKET", "result_type": "limitup_sentiment",
-            "ts_code": "MARKET", "name": "市场情绪面",
-            "limit_up_streak": 0, "prev_streak": 0, "blow_up_count": 0, "reseal_count": 0,
-            "is_first_board": False, "is_one_word": False,
-            "is_limit_up_close": False, "touched_limit": False, "is_concept_leader": False,
-            "concept_board_count": 0,
-            "result_value": f"{sentiment.get('n_limit_up', 0)}涨停/{sentiment.get('max_height', 0)}板",
-            "result_json": json.dumps(sentiment, ensure_ascii=False),
-            "data_version": data_version, "update_time": now_iso,
-        })
+        mrow = _market_row(sentiment, trade_date, data_version, now_iso)
         mdf = pd.DataFrame([mrow]).reindex(columns=out.columns).astype(out.dtypes.to_dict(), errors="ignore")
         out = pd.concat([out, mdf], ignore_index=True)
     return out
@@ -875,8 +896,9 @@ def backfill(start_date: str, end_date: str, with_minute: bool = False,
     frames = []
     for d in dates:
         pool = assemble_pool(streak, d, minute=None, concepts=concepts)
-        if not pool.empty:
-            frames.append(to_standard_output(pool))
+        out_d = to_standard_output(pool)   # 空涨停日也会回 1 行 MARKET（情绪面时序不缺日）
+        if not out_d.empty:
+            frames.append(out_d)
     if not frames:
         return pd.DataFrame(columns=OUTPUT_COLS)
     return pd.concat(frames, ignore_index=True)
