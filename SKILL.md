@@ -1,5 +1,6 @@
 ---
 name: skill-b6-limitup-pool
+description: Manage and review A-share limit-up pools with reproducible research outputs. Use when monitoring limit-up candidates, pool changes, or related risk signals; this is research-only material, not investment advice.
 license: GPL-3.0-only
 metadata:
   organization: QuantSkills
