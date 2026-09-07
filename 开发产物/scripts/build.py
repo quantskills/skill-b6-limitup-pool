@@ -46,7 +46,7 @@ DEFAULT_DATA_VERSION = "pandadata-limitup-pool-v1"
 # 回看窗口：算 N 连板至少需要 N 个交易日历史；默认 45 自然日 ≈ 30 交易日，覆盖到 ~30 连板
 LOOKBACK_CALENDAR_DAYS = int(os.getenv("B6_LOOKBACK_DAYS", "45"))
 DAILY_CHUNK_DAYS = int(os.getenv("B6_DAILY_CHUNK_DAYS", "30"))
-LIMIT_TOL = 0.999  # 贴板容差（接口价偶有 0.01 抖动）
+LIMIT_TOL = 0.9999  # 贴板容差：仅容忍浮点噪声（high 与 limit_up 同源，不存在跨源 0.01 抖动；issue #2）
 
 # 涨停池行的标准必填字段（run 输入校验用）
 REQUIRED_COLUMNS = {"trade_date", "ts_code", "close", "pre_close"}
@@ -158,7 +158,7 @@ def resolve_trade_window(end_date: str, pd_api: Any) -> tuple[str, str, str]:
 def _fetch_daily_once(pd_api: Any, start: str, end: str, indicator: str = "") -> pd.DataFrame:
     return pd_api.get_stock_daily(
         start_date=_compact(start), end_date=_compact(end),
-        symbol=[], fields=[], st=False, indicator=indicator,
+        symbol=[], fields=[], st=True, indicator=indicator,
     )
 
 
@@ -905,12 +905,18 @@ def backfill(start_date: str, end_date: str, with_minute: bool = False,
 
 
 def save_parquet(panel: pd.DataFrame, out_path: str | Path = DEFAULT_OUT, append: bool = True) -> Path:
-    """落地 parquet。append=True 时按 (trade_date,target_id) 去重合并历史。"""
+    """落地 parquet。append=True 时先删除本次覆盖到的 (trade_date, build_id) 旧行，再合并历史并去重。"""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     if append and out_path.exists():
         try:
             old = pd.read_parquet(out_path)
+            # 按 (trade_date, build_id) 先整体删除本次重算覆盖到的旧行，再插入新结果：
+            # 否则重跑/修复算法后当日已出池的个股旧行会永久残留（issue #2 问题 3）
+            if not panel.empty and {"trade_date", "build_id"} <= set(old.columns):
+                new_keys = panel[["trade_date", "build_id"]].drop_duplicates()
+                old = old.merge(new_keys.assign(_drop=1), on=["trade_date", "build_id"], how="left")
+                old = old[old["_drop"].isna()].drop(columns="_drop")
             panel = pd.concat([old, panel], ignore_index=True)
             panel = panel.drop_duplicates(subset=["trade_date", "build_id", "target_id", "result_type"], keep="last")
         except Exception as exc:  # noqa: BLE001

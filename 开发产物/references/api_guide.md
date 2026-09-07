@@ -41,8 +41,8 @@ export PANDA_PASSWORD=<密码>              # 兼容 PANDA_DATA_PASSWORD
 
 ```text
 eff_limit_up = limit_up if limit_up > 0 else round(pre_close * (1+limit_rate), 2)
-is_limit_up_close = (trade_status == 0) & (close >= eff_limit_up * 0.999)
-touched_limit     = (high >= eff_limit_up * 0.999) & (trade_status == 0)   # 盘中曾摸板
+is_limit_up_close = (trade_status == 0) & (close >= eff_limit_up * 0.9999)
+touched_limit     = (high >= eff_limit_up * 0.9999) & (trade_status == 0)   # 盘中曾摸板
 ```
 
 ### 连板数（`limit_up_streak`）
@@ -55,7 +55,7 @@ touched_limit     = (high >= eff_limit_up * 0.999) & (trade_status == 0)   # 盘
 分钟级（`seal_metric_source="minute"`）：
 
 ```text
-sealed(t) = minute.high(t) >= eff_limit_up * 0.999
+sealed(t) = minute.high(t) >= eff_limit_up * 0.9999
 blow_up_count = #( sealed: True -> False )          # 封后被砸开的次数
 first_seal_time = 第一根 sealed 分钟的时刻
 final_seal_time = 最后一根 sealed 分钟的时刻        # 最终回封/封死时刻
