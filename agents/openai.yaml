@@ -1,3 +1,6 @@
+name: skill-b6-limitup-pool
+entrypoint: SKILL.md
+canonical_root: SKILL.md
 interface:
   display_name: "Limit-Up Pool"
   short_description: "Maintain the daily A-share limit-up pool with streak, blow-up and re-seal marks plus sentiment metrics"

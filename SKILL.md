@@ -1,7 +1,8 @@
 ---
 name: skill-b6-limitup-pool
-description: 涨停池动态管理——每日盘后维护 A 股涨停池，标记首板/连板数/炸板次数/回封时间，做题材分组、特殊形态识别与情绪面量化（分层晋级率/炸板率/赚钱效应），输出多维表格与 HTML 看板。BUILD 型 skill，可被复盘 agent 调用。
+description: 涨停池动态管理：每日盘后维护 A 股涨停池，标记首板、连板数、炸板次数与回封时间，做题材分组、特殊形态识别与情绪面量化（分层晋级率、炸板率、赚钱效应），输出多维表格与 HTML 看板。Use when monitoring limit-up candidates, pool changes, streak and blow-up statistics, or related sentiment signals. Research and education only, not investment advice.
 license: GPL-3.0-only
+supported-runtimes: [cursor, claude-code, codex, hermes, openclaw]
 metadata:
   organization: QuantSkills
   organization_url: https://github.com/quantskills
@@ -9,8 +10,33 @@ metadata:
   repository_url: https://github.com/quantskills/skill-b6-limitup-pool
   project_type: skill
   collection: limit-up-pool
+  maintainer: ZLHad
+  tags: [a-share, limit-up, streak, sentiment, monitoring, pandadata]
+quantSkills:
+  schema_version: 2.1.0
+  organization: quantskills
+  organization_url: https://github.com/quantskills
+  repository: skill-b6-limitup-pool
+  repository_url: https://github.com/quantskills/skill-b6-limitup-pool
+  project_type: skill
   license: GPL-3.0-only
-  platforms: [claude-code, codex, cursor, hermes, openclaw]
+  maintainer: ZLHad
+  collection: limit-up-pool
+  catalog:
+    category: "04"
+    subcategory: 04.automated-alerts
+  workflow:
+    primary_stage: monitoring
+    workflow_stages: [data-ingestion, monitoring, reporting]
+  tags: [a-share, limit-up, streak, sentiment, monitoring, pandadata]
+  platforms: [cursor, claude-code, codex, hermes, openclaw]
+  status: active
+  validation_level: listed
+  maintainer_type: community
+  summary_zh: "每日盘后维护 A 股涨停池，标记首板、连板、炸板与回封，做题材分组、特殊形态与情绪面量化，输出多维表格与 HTML 看板。"
+  summary_en: "Maintains the daily A-share limit-up pool with streak, blow-up and re-seal marks, theme groups, special patterns and sentiment metrics; outputs tables and an HTML dashboard; research only."
+  interface:
+    mode: natural-language
 ---
 
 # skill-b6-limitup-pool · 涨停池动态管理（Limit-Up Pool）
