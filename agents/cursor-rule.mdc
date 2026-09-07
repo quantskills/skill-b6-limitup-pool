@@ -1,5 +1,40 @@
 ---
-description: Load the canonical QuantSkills skill instructions.
+description: Use the Limit-Up Pool skill (skill-b6-limitup-pool) when the user wants to maintain or query the post-market A-share limit-up pool: first boards, streak counts, blow-up counts, re-seal times, theme groups, special patterns, and sentiment metrics such as promotion and blow-up rates.
+alwaysApply: false
 ---
 
-Follow the canonical root instructions in `SKILL.md`; this Cursor adapter adds no policy.
+# Limit-Up Pool Skill (skill-b6-limitup-pool)
+
+当用户想在盘后维护/查询 A 股涨停池：首板、连板数、炸板次数、回封时间、题材分组、特殊形态、晋级率/炸板率等情绪面指标时，读取并遵循 [SKILL.md](../SKILL.md) 作为本 skill 的规范说明。
+详细调用声明见 `开发产物/SKILL.md`。
+
+Use this skill when the user wants to maintain or query the post-market A-share limit-up pool: first boards, streak counts, blow-up counts, re-seal times, theme groups, special patterns, and sentiment metrics such as promotion and blow-up rates. Read and follow [SKILL.md](../SKILL.md) as the canonical
+instructions; the detailed agent-facing declaration lives in `开发产物/SKILL.md`.
+
+## Workflow
+
+1. Read `SKILL.md`, then `开发产物/SKILL.md`.
+2. Read the references before changing any data logic:
+- `开发产物/references/api_guide.md`
+3. Run the entrypoints from the repository root:
+
+```bash
+python 开发产物/scripts/build.py --mode daily
+python 开发产物/scripts/build.py --mode backfill --start 20250101 --end 20250630
+python 开发产物/scripts/render_html.py
+```
+
+## Hard rules / 硬性口径
+
+1. 涨停判定按交易所规则分档（主板 10% / 创业板科创板 20% / ST 5% / 北交所 30%），不要用单一阈值
+2. 炸板/回封在只有日线时是代理口径，输出必须标注 `日线代理`，不得表述为分钟级事实
+3. 落盘 parquet 主键为 `trade_date`/`build_id`/`target_id`/`result_type`；重跑同一交易日后要核对当日是否残留旧行（已知问题，见仓库 issue #2）
+
+1. Limit-up thresholds follow exchange rules by board (10% main board / 20% ChiNext & STAR / 5% ST / 30% BSE); never use one flat threshold
+2. Blow-up and re-seal marks derived from daily bars are proxies; label them as daily-proxy and never present them as minute-level facts
+3. Parquet output is keyed by `trade_date`/`build_id`/`target_id`/`result_type`; after re-running a trade date, check for leftover stale rows of that day (known issue, see repository issue #2)
+
+## Boundaries
+
+- Data source is PandaData via `panda_data`; credentials come only from environment variables or `~/.pandadata/pandadata.env`. Never hard-code or echo credentials.
+- Community Project, not reviewed, certified, or endorsed by QuantSkills. Research and educational use only; no investment advice, no return promises.

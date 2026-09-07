@@ -1,3 +1,4 @@
-name: skill-b6-limitup-pool
-entrypoint: SKILL.md
-canonical_root: SKILL.md
+interface:
+  display_name: "Limit-Up Pool"
+  short_description: "Maintain the daily A-share limit-up pool with streak, blow-up and re-seal marks plus sentiment metrics"
+  default_prompt: "Use $skill-b6-limitup-pool when the user wants to maintain or query the post-market A-share limit-up pool: first boards, streak counts, blow-up counts, re-seal times, theme groups, special patterns, and sentiment metrics such as promotion and blow-up rates. Read SKILL.md first and follow its data-scope rules."

@@ -1,0 +1,7 @@
+---
+description: Load the Limit-Up Pool skill (skill-b6-limitup-pool) when the user wants to maintain or query the post-market A-share limit-up pool: first boards, streak counts, blow-up counts, re-seal times, theme groups, special patterns, and sentiment metrics such as promotion and blow-up rates.
+alwaysApply: false
+---
+
+Read and follow [SKILL.md](SKILL.md) as the canonical skill instructions.
+The full Cursor rule with workflow and hard rules is [agents/cursor-rule.mdc](agents/cursor-rule.mdc).

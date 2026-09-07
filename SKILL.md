@@ -1,6 +1,6 @@
 ---
 name: skill-b6-limitup-pool
-description: Manage and review A-share limit-up pools with reproducible research outputs. Use when monitoring limit-up candidates, pool changes, or related risk signals; this is research-only material, not investment advice.
+description: 涨停池动态管理——每日盘后维护 A 股涨停池，标记首板/连板数/炸板次数/回封时间，做题材分组、特殊形态识别与情绪面量化（分层晋级率/炸板率/赚钱效应），输出多维表格与 HTML 看板。BUILD 型 skill，可被复盘 agent 调用。
 license: GPL-3.0-only
 metadata:
   organization: QuantSkills
@@ -10,6 +10,7 @@ metadata:
   project_type: skill
   collection: limit-up-pool
   license: GPL-3.0-only
+  platforms: [claude-code, codex, cursor, hermes, openclaw]
 ---
 
 # skill-b6-limitup-pool · 涨停池动态管理（Limit-Up Pool）

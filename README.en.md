@@ -51,3 +51,13 @@ Community member [@ZLHad](https://github.com/ZLHad). Issues / PRs welcome.
 - Limit-up judgment / streak state machine / minute-level first-seal & blow-up logic are kept consistent with the
   same author's alpha-A3 consecutive-board factor to avoid drift.
 - Third-party deps: `panda_data`, `pandas`, `numpy`, `pyarrow`, each under their own licenses.
+
+## Runtime entrypoints
+
+Per the QuantSkills community rules this repository ships entrypoints for multiple agent runtimes; the root [SKILL.md](SKILL.md) is the canonical declaration:
+
+| Runtime | Entrypoint |
+|---|---|
+| Claude Code / Codex | root `SKILL.md` (Codex interface metadata in [agents/openai.yaml](agents/openai.yaml)) |
+| Cursor | [.cursor/rules/quantskills-skill.mdc](.cursor/rules/quantskills-skill.mdc); full rule in [agents/cursor-rule.mdc](agents/cursor-rule.mdc) |
+| Hermes / OpenClaw | [agents/portable-loader.md](agents/portable-loader.md) (portable loader prompt) |
