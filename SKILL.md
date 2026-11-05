@@ -84,3 +84,7 @@ A 股涨停池盘后维护工具：每日维护涨停池，标记 **首板 / 连
 - 第三方依赖：`panda_data`、`pandas`、`numpy`、`pyarrow`，均遵循各自许可证。
 
 English declaration: see [README.en.md](README.en.md).
+
+## Pandadata compatibility
+
+[Pandadata 1.0.6 compatibility](references/pandadata-compatibility.md) — exact SDK baseline, validation scope, and shared guidance for all supported agent runtimes.

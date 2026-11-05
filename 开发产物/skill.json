@@ -12,8 +12,8 @@
     "render_markdown": "scripts/render.py:render_markdown",
     "render_html": "scripts/render_html.py:render_html"
   },
-  "data_source": "PandaData (panda_data>=0.0.9): get_stock_daily + get_stock_min",
+  "data_source": "PandaData (panda_data==1.0.6): get_stock_daily + get_stock_min",
   "production": "build-b6-limitup-pool/生产产物/database.parquet",
   "callable_by_alpha": true,
-  "dependencies": ["panda_data>=0.0.9", "pandas", "numpy", "pyarrow"]
+  "dependencies": ["panda_data==1.0.6", "pandas", "numpy", "pyarrow"]
 }
